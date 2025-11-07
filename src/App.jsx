@@ -3,7 +3,6 @@ import Navbar from './components/Navbar.jsx';
 import Hero from './components/Hero.jsx';
 import AuthGate from './components/AuthGate.jsx';
 import ListingGrid from './components/ListingGrid.jsx';
-import Footer from './components/Footer.jsx';
 import CreateListingForm from './components/CreateListingForm.jsx';
 import ProfileForm from './components/ProfileForm.jsx';
 import { LogOut, User as UserIcon, PlusCircle } from 'lucide-react';
@@ -54,8 +53,8 @@ export default function App() {
               <div className="bg-white border rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold">Sign in to create listings</h3>
-                    <p className="text-sm text-gray-600">Use your @satiengg.in email to continue.</p>
+                    <h3 className="text-lg font-semibold">Sign in to continue</h3>
+                    <p className="text-sm text-gray-600">Use your @satiengg.in email to receive an OTP.</p>
                   </div>
                   <button onClick={() => setShowAuth(true)} className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
                     Get started
@@ -90,8 +89,6 @@ export default function App() {
 
         <ListingGrid />
       </main>
-
-      <Footer />
 
       {/* Floating quick action for signed-in users on small screens */}
       {user && (
