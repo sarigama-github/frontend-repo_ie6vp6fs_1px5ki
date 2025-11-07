@@ -1,87 +1,151 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL;
+const emailDomain = 'satiengg.in';
 
-export default function AuthGate({ onAuthenticated }) {
-  const [step, setStep] = useState('request');
+function isAllowedEmail(email) {
+  return /^(?!\.)[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email) && email.endsWith(`@${emailDomain}`);
+}
+
+export default function AuthGate({ onAuthed }) {
+  const [step, setStep] = useState('enter');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  const [code, setCode] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [devCode, setDevCode] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const requestOtp = async () => {
-    setLoading(true); setError('');
+  useEffect(() => {
+    const saved = localStorage.getItem('peerbazaar:user');
+    if (saved) {
+      try {
+        const u = JSON.parse(saved);
+        if (u?.email && u?.email.endsWith(`@${emailDomain}`)) {
+          onAuthed(u);
+        }
+      } catch {}
+    }
+  }, [onAuthed]);
+
+  const backend = import.meta.env.VITE_BACKEND_URL || '';
+
+  const requestOtp = async (e) => {
+    e.preventDefault();
+    setMessage('');
+    setDevCode('');
+    if (!isAllowedEmail(email)) {
+      setMessage(`Use your @${emailDomain} email (e.g., krishna28cse@${emailDomain})`);
+      return;
+    }
+    setLoading(true);
     try {
-      const res = await fetch(`${BACKEND}/auth/otp/request`, {
+      const res = await fetch(`${backend}/auth/otp/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, name }),
       });
-      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
-      setDevCode(data.dev_code || '');
+      if (!res.ok) throw new Error(data?.detail || 'Failed to request code');
+      if (data.dev_code) setDevCode(data.dev_code);
       setStep('verify');
-    } catch (e) {
-      setError('Failed to send code. Make sure you use @satiengg.in email.');
+      setMessage('We sent a 6-digit code to your email.');
+    } catch (err) {
+      setMessage(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const verifyOtp = async () => {
-    setLoading(true); setError('');
+  const verifyOtp = async (e) => {
+    e.preventDefault();
+    const code = (new FormData(e.currentTarget).get('code') || '').toString().trim();
+    if (!code) return;
+    setLoading(true);
+    setMessage('');
     try {
-      const res = await fetch(`${BACKEND}/auth/otp/verify`, {
+      const res = await fetch(`${backend}/auth/otp/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code }),
       });
-      if (!res.ok) throw new Error(await res.text());
-      const user = await res.json();
-      onAuthenticated(user);
-    } catch (e) {
-      setError('Invalid or expired code. Try again.');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.detail || 'Verification failed');
+      if (data.allowed) {
+        localStorage.setItem('peerbazaar:user', JSON.stringify({ email: data.email, name: data.name }));
+        onAuthed({ email: data.email, name: data.name });
+      } else {
+        setMessage('Not allowed. This service is for @satiengg.in students.');
+      }
+    } catch (err) {
+      setMessage(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="bg-white border rounded-2xl p-6 shadow-sm">
-      {step === 'request' && (
-        <div className="space-y-4">
+    <div className="max-w-md w-full mx-auto border border-slate-200 rounded-xl p-6 bg-white shadow-sm">
+      {step === 'enter' && (
+        <form onSubmit={requestOtp} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium">Name</label>
-            <input value={name} onChange={e => setName(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Your name" />
+            <label className="block text-sm font-medium text-slate-700">Full name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="mt-1 w-full rounded-md border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
+              placeholder="Krishna Sharma"
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium">SATI Email</label>
-            <input value={email} onChange={e => setEmail(e.target.value)} className="mt-1 w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="you@satiengg.in" />
+            <label className="block text-sm font-medium text-slate-700">College email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="mt-1 w-full rounded-md border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
+              placeholder={`krishna28cse@${emailDomain}`}
+            />
+            <p className="mt-1 text-xs text-slate-500">Only emails like krishna28cse@{emailDomain} are allowed.</p>
           </div>
-          {error && <div className="text-sm text-red-600">{error}</div>}
-          <button disabled={loading} onClick={requestOtp} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
-            {loading ? 'Sending...' : 'Send code'}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full inline-flex justify-center rounded-md bg-indigo-600 text-white px-4 py-2 font-medium hover:bg-indigo-500 disabled:opacity-60"
+          >
+            {loading ? 'Sending...' : 'Send OTP'}
           </button>
-        </div>
+          {message && <p className="text-sm text-slate-600">{message}</p>}
+        </form>
       )}
 
       {step === 'verify' && (
-        <div className="space-y-4">
-          <div className="text-sm text-gray-600">We sent a 6-digit code to {email}. Enter it below.</div>
-          {devCode && (
-            <div className="text-xs text-gray-500">Dev code: <span className="font-mono">{devCode}</span></div>
-          )}
+        <form onSubmit={verifyOtp} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium">Code</label>
-            <input value={code} onChange={e => setCode(e.target.value)} maxLength={6} className="mt-1 w-full border rounded-lg px-3 py-2 tracking-widest text-center font-mono text-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="000000" />
+            <label className="block text-sm font-medium text-slate-700">Enter 6-digit code</label>
+            <input
+              name="code"
+              inputMode="numeric"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              required
+              className="mt-1 w-full rounded-md border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 tracking-widest text-center"
+              placeholder="000000"
+            />
+            {devCode && (
+              <p className="mt-2 text-xs text-emerald-600">Dev code: <span className="font-mono font-medium">{devCode}</span></p>
+            )}
           </div>
-          {error && <div className="text-sm text-red-600">{error}</div>}
-          <button disabled={loading} onClick={verifyOtp} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
-            {loading ? 'Verifying...' : 'Verify'}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full inline-flex justify-center rounded-md bg-slate-900 text-white px-4 py-2 font-medium hover:bg-slate-800 disabled:opacity-60"
+          >
+            {loading ? 'Verifying...' : 'Verify & Continue'}
           </button>
-        </div>
+          {message && <p className="text-sm text-slate-600">{message}</p>}
+        </form>
       )}
     </div>
   );

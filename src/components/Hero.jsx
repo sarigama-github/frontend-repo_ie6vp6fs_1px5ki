@@ -1,35 +1,32 @@
 import React from 'react';
-import { LockKeyhole, UserCheck } from 'lucide-react';
 
-export default function Hero({ onGetStarted }) {
+export default function Hero() {
   return (
-    <section className="bg-gradient-to-b from-indigo-50 to-white py-12">
-      <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Verify your SATI email with OTP
-          </h1>
-          <p className="mt-3 text-gray-600">
-            Quick, passwordless sign-in for @satiengg.in accounts. Receive a one-time
-            passcode in your inbox and get started.
-          </p>
-          <div className="mt-6">
-            <button onClick={onGetStarted} className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg">
-              <LockKeyhole size={18} /> Get started
-            </button>
+    <section className="relative bg-gradient-to-b from-indigo-50 to-white">
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+        <div className="grid gap-10 lg:grid-cols-2 items-center">
+          <div>
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-slate-900">
+              Buy, sell, and exchange on campus
+            </h1>
+            <p className="mt-4 text-lg text-slate-600">
+              PeerBazaar is a passwordless marketplace exclusively for @satiengg.in students. Sign in with a
+              one-time code sent to your email and start posting listings in minutes.
+            </p>
+            <ul className="mt-6 space-y-2 text-slate-700">
+              <li>• Passwordless OTP sign-in</li>
+              <li>• Profiles tied to @satiengg.in email</li>
+              <li>• Simple listing creation</li>
+            </ul>
           </div>
-        </div>
-        <div className="bg-white rounded-2xl border shadow-sm p-6">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-indigo-600 text-white grid place-items-center font-bold">OTP</div>
-            <div>
-              <div className="font-semibold">One-time passcode</div>
-              <div className="text-sm text-gray-600">Secure, email-based verification</div>
+          <div className="relative rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-lg bg-indigo-100 h-24" />
+              <div className="rounded-lg bg-indigo-100 h-24" />
+              <div className="rounded-lg bg-indigo-100 h-24" />
+              <div className="rounded-lg bg-indigo-100 h-24" />
             </div>
-          </div>
-          <div className="mt-4 text-sm text-gray-600">
-            We only allow sign-ins from the official domain. Codes expire in a few minutes
-            to keep your account safe.
+            <p className="mt-4 text-sm text-slate-500">Mock listing cards</p>
           </div>
         </div>
       </div>
