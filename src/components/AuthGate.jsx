@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Lock, AlertCircle } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 
 const EMAIL_DOMAIN = 'satiengg.in';
 
@@ -7,8 +7,9 @@ export default function AuthGate({ onAuthenticated }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -24,8 +25,33 @@ export default function AuthGate({ onAuthenticated }) {
       return;
     }
 
-    // Simulated auth flow for demo: in a full app, call backend here.
-    onAuthenticated({ email: trimmed, name: trimmed.split('@')[0] });
+    try {
+      setLoading(true);
+      const base = import.meta.env.VITE_BACKEND_URL;
+      const res = await fetch(`${base}/auth/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: trimmed }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const msg = data?.detail || 'Unable to validate email. Please try again.';
+        throw new Error(msg);
+      }
+
+      const data = await res.json();
+      // Expecting { valid: true, email: string }
+      if (data?.valid) {
+        onAuthenticated({ email: trimmed, name: trimmed.split('@')[0] });
+      } else {
+        setError('Email validation failed.');
+      }
+    } catch (err) {
+      setError(err.message || 'Something went wrong.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -59,8 +85,9 @@ export default function AuthGate({ onAuthenticated }) {
             <span>{error}</span>
           </div>
         )}
-        <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg font-medium transition">
-          Continue
+        <button type="submit" disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed text-white py-2.5 rounded-lg font-medium transition inline-flex items-center justify-center gap-2">
+          {loading && <Loader2 className="animate-spin" size={18} />} 
+          {loading ? 'Validating…' : 'Continue'}
         </button>
       </form>
     </div>
