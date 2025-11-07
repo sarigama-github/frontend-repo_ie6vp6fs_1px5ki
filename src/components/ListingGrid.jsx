@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { IndianRupee, MapPin, Tag, RefreshCcw, AlertTriangle, Image as ImageIcon } from 'lucide-react';
+import { IndianRupee, MapPin, Tag, RefreshCcw, AlertTriangle, Image as ImageIcon, Mail, CircleCheck, CircleDot } from 'lucide-react';
 
 export default function ListingGrid() {
   const [listings, setListings] = useState([]);
@@ -102,6 +102,9 @@ export default function ListingGrid() {
                   <Tag size={14} /> {item.category}
                 </span>
               )}
+              <span className={`absolute top-3 right-3 inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md ${item.active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
+                {item.active !== false ? <CircleCheck size={14}/> : <CircleDot size={14}/>} {item.active !== false ? 'Active' : 'Inactive'}
+              </span>
             </div>
             <div className="p-4 space-y-2">
               <h3 className="font-semibold line-clamp-2 group-hover:text-indigo-700">{item.title}</h3>
@@ -114,7 +117,9 @@ export default function ListingGrid() {
                 </div>
               </div>
               {item.seller_email && (
-                <div className="text-xs text-gray-500">Seller: {item.seller_email}</div>
+                <a href={`mailto:${item.seller_email}`} className="inline-flex items-center gap-1 text-xs text-indigo-700 hover:underline">
+                  <Mail size={14} /> {item.seller_email}
+                </a>
               )}
             </div>
           </article>
